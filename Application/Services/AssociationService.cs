@@ -9,17 +9,19 @@ using RabbitMQ.Client.Events;
 
 public class AssociationService
 {
-    private AssociationAmqpGateway _associationAmqpGateway;
+    private AssociationCreatedAmqpGateway _associationCreatedAmqpGateway;
+    private AssociationUpdatedAmqpGateway _associationUpdatedAmqpGateway;
     private readonly IAssociationRepository _associationRepository;
     private readonly IColaboratorsIdRepository _colaboratorsRepository;
     private readonly IProjectRepository _projectRepository;
 
-    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationAmqpGateway associationAmqpGateway)
+    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationCreatedAmqpGateway associationCreatedAmqpGateway, AssociationUpdatedAmqpGateway associationUpdatedAmqpGateway)
     {
         _associationRepository = associationRepository;
         _colaboratorsRepository = colaboratorsRepository;
         _projectRepository = projectRepository;
-        _associationAmqpGateway = associationAmqpGateway;
+        _associationCreatedAmqpGateway = associationCreatedAmqpGateway;
+        _associationUpdatedAmqpGateway = associationUpdatedAmqpGateway;
     }
 
     public async Task<IEnumerable<AssociationDTO>> GetAll()
@@ -62,7 +64,7 @@ public class AssociationService
             AssociationDTO assoDTO = AssociationDTO.ToDTO(associationSaved);
 
             string associationAmqpDTO = AssociationAmqpDTO.Serialize(assoDTO);
-            _associationAmqpGateway.Publish(associationAmqpDTO);
+            _associationCreatedAmqpGateway.Publish(associationAmqpDTO);
 
             return assoDTO;
         }
@@ -82,7 +84,7 @@ public class AssociationService
         {
             if (!IsUpdateNeeded(association, associationDTO))
             {
-                Console.WriteLine("Association already exists.");
+                Console.WriteLine("Already updated.");
                 errorMessages.Add("Already updated.");
                 return false;
             }
@@ -94,7 +96,7 @@ public class AssociationService
             AssociationDTO assoDTO = AssociationDTO.ToDTO(associationMod);
 
             string associationAmqpDTO = AssociationAmqpDTO.Serialize(assoDTO);
-            _associationAmqpGateway.Publish(associationAmqpDTO);
+            _associationUpdatedAmqpGateway.Publish(associationAmqpDTO);
 
             return true;
         }
@@ -179,25 +181,4 @@ public class AssociationService
 
         return false;
     }
-
-
-    // public async Task<bool> Update(long id, AssociationDTO AssociacaoDTO, List<string> errorMessages)
-    // {
-    //     Holiday holiday = await _associacaoRepository.GetHolidayByIdAsync(id);
-
-    //     if(holiday!=null)
-    //     {
-    //         AssociationDTO.UpdateToDomain(holiday, AssociacaoDTO);
-
-    //         await _associacaoRepository.Update(holiday, errorMessages);
-
-    //         return true;
-    //     }
-    //     else
-    //     {
-    //         errorMessages.Add("Not found");
-
-    //         return false;
-    //     }
-    // }
 }

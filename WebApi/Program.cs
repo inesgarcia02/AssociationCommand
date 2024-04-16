@@ -37,7 +37,8 @@ builder.Services.AddTransient<IAssociationRepository, AssociationRepository>();
 builder.Services.AddTransient<IAssociationFactory, AssociationFactory>();
 builder.Services.AddTransient<AssociationMapper>();
 builder.Services.AddTransient<AssociationService>();
-builder.Services.AddTransient<AssociationAmqpGateway>();
+builder.Services.AddTransient<AssociationCreatedAmqpGateway>();
+builder.Services.AddTransient<AssociationUpdatedAmqpGateway>();
 
 
 //builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationConsumerController>();
@@ -58,7 +59,8 @@ builder.Services.AddTransient<ProjectService>();
 //     }
 // });
 
-builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationConsumerController>();
+builder.Services.AddSingleton<IRabbitMQAssociationCConsumerController, RabbitMQAssociationCConsumerController>();
+builder.Services.AddSingleton<IRabbitMQAssociationUConsumerController, RabbitMQAssociationUConsumerController>();
 builder.Services.AddSingleton<IRabbitMQProjectConsumerController, RabbitMQProjectConsumerController>();
 builder.Services.AddSingleton<IRabbitMQColaboratorConsumerController, RabbitMQColaboratorConsumerController>();
 
@@ -75,10 +77,12 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-var rabbitMQAssociationConsumerService = app.Services.GetRequiredService<IRabbitMQAssociationConsumerController>();
+var rabbitMQAssociationCConsumerService = app.Services.GetRequiredService<IRabbitMQAssociationCConsumerController>();
+var rabbitMQAssociationUConsumerService = app.Services.GetRequiredService<IRabbitMQAssociationUConsumerController>();
 var rabbitMQProjectConsumerService = app.Services.GetRequiredService<IRabbitMQProjectConsumerController>();
 var rabbitMQColaboratorService = app.Services.GetRequiredService<IRabbitMQColaboratorConsumerController>();
-rabbitMQAssociationConsumerService.StartConsuming();
+rabbitMQAssociationCConsumerService.StartConsuming();
+rabbitMQAssociationUConsumerService.StartConsuming();
 rabbitMQProjectConsumerService.StartConsuming();
 rabbitMQColaboratorService.StartConsuming();
 
