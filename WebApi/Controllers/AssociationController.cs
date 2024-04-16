@@ -30,5 +30,26 @@ namespace WebApi.Controllers
             else
                 return BadRequest(_errorMessages);
         }
+
+
+        // PUT: api/Association/
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("")]
+        public async Task<IActionResult> PutAssociation(long id, AssociationDTO associationDTO)
+        {
+            if (id != associationDTO.Id)
+            {
+                return BadRequest();
+            }
+
+            bool wasUpdated = await _associationService.Update(id, associationDTO, _errorMessages);
+
+            if (!wasUpdated /* && _errorMessages.Any() */)
+            {
+                return BadRequest(_errorMessages);
+            }
+
+            return Ok();
+        }
     }
 }

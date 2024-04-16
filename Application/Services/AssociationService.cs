@@ -73,6 +73,50 @@ public class AssociationService
         }
     }
 
+
+    public async Task<bool> Update(long id, AssociationDTO associationDTO, List<string> errorMessages)
+    {
+        Association association = await _associationRepository.GetAssociationsByIdAsync(id);
+
+        if (association != null)
+        {
+            if (!IsUpdateNeeded(association, associationDTO))
+            {
+                Console.WriteLine("Association already exists.");
+                errorMessages.Add("Already updated.");
+                return false;
+            }
+
+            AssociationDTO.UpdateToDomain(association, associationDTO);
+
+            Association associationMod = await _associationRepository.Update(association, errorMessages);
+
+            AssociationDTO assoDTO = AssociationDTO.ToDTO(associationMod);
+
+            string associationAmqpDTO = AssociationAmqpDTO.Serialize(assoDTO);
+            _associationAmqpGateway.Publish(associationAmqpDTO);
+
+            return true;
+        }
+        else
+        {
+            errorMessages.Add("Not found");
+
+            return false;
+        }
+    }
+
+    private bool IsUpdateNeeded(Association existingAssociation, AssociationDTO newAssociationDTO)
+    {
+        if (existingAssociation.StartDate == newAssociationDTO.StartDate &&
+            existingAssociation.EndDate == newAssociationDTO.EndDate)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     private async Task<bool> VerifyAssociation(AssociationDTO associationDTO, List<string> errorMessages)
     {
         bool aExists = await _associationRepository.AssociationExists(associationDTO.Id);
