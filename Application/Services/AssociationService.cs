@@ -89,6 +89,13 @@ public class AssociationService
                 return false;
             }
 
+            if (!CheckDates(association, associationDTO.StartDate, associationDTO.EndDate).Result)
+            {
+                Console.WriteLine("Association dates don't match with project.");
+                errorMessages.Add("Association dates don't match with project.");
+                return false;
+            }
+
             AssociationDTO.UpdateToDomain(association, associationDTO);
 
             Association associationMod = await _associationRepository.Update(association, errorMessages);
@@ -165,6 +172,32 @@ public class AssociationService
 
         DateOnly startAssociation = associationDTO.StartDate;
         DateOnly endAssociation = associationDTO.EndDate;
+
+        if (endProject != null)
+        {
+            if (startAssociation >= startProject && endAssociation <= endProject)
+            {
+                return true;
+            }
+        }
+        else if (startAssociation >= startProject)
+        {
+            return true;
+        }
+
+
+        return false;
+    }
+
+    private async Task<bool> CheckDates(Association association, DateOnly startDate, DateOnly endDate)
+    {
+        Project p = await _projectRepository.GetProjectsByIdAsync(association.ProjectId);
+
+        DateOnly startProject = p.StartDate;
+        DateOnly? endProject = p.EndDate;
+
+        DateOnly startAssociation = startDate;
+        DateOnly endAssociation = endDate;
 
         if (endProject != null)
         {
