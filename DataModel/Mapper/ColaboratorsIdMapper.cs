@@ -1,4 +1,5 @@
 using DataModel.Model;
+using Domain.Model;
 
 namespace DataModel.Mapper
 {
@@ -9,19 +10,21 @@ namespace DataModel.Mapper
         {
         }
 
-        public long ToDomain(ColaboratorsIdDataModel colaboratorsIdDM)
+        public Colaborator ToDomain(ColaboratorsIdDataModel colaboratorsIdDM)
         {
-            return colaboratorsIdDM.Id;
+            Colaborator colaborator = new Colaborator(colaboratorsIdDM.Id);
+
+            return colaborator;
         }
 
-        public IEnumerable<long> ToDomain(IEnumerable<ColaboratorsIdDataModel> colaboratorsIdDataModel)
+        public IEnumerable<Colaborator> ToDomain(IEnumerable<ColaboratorsIdDataModel> colaboratorsIdDataModel)
         {
 
-            List<long> colaboratorsIdDomain = new List<long>();
+            List<Colaborator> colaboratorsIdDomain = new List<Colaborator>();
 
             foreach(ColaboratorsIdDataModel colaboratorIdDomain in colaboratorsIdDataModel)
             {
-                long id = ToDomain(colaboratorIdDomain);
+                Colaborator id = ToDomain(colaboratorIdDomain);
 
                 colaboratorsIdDomain.Add(id);
             }

@@ -7,6 +7,7 @@ using DataModel.Mapper;
 
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Domain.IRepository;
+using Domain.Model;
 
 public class ColaboratorsIdRepository : GenericRepository<ColaboratorsIdRepository>, IColaboratorsIdRepository
 {    
@@ -16,13 +17,13 @@ public class ColaboratorsIdRepository : GenericRepository<ColaboratorsIdReposito
         _colaboratorsIdMapper = mapper;
     }
 
-    public async Task<IEnumerable<long>> GetColaboratorsIdAsync()
+    public async Task<IEnumerable<Colaborator>> GetColaboratorsIdAsync()
     {
         try {
             IEnumerable<ColaboratorsIdDataModel> colaboratorsIdDataModel = await _context.Set<ColaboratorsIdDataModel>()
                     .ToListAsync();
 
-            IEnumerable<long> colaboratorsId = _colaboratorsIdMapper.ToDomain(colaboratorsIdDataModel);
+            IEnumerable<Colaborator> colaboratorsId = _colaboratorsIdMapper.ToDomain(colaboratorsIdDataModel);
 
             return colaboratorsId;
         }
@@ -32,7 +33,25 @@ public class ColaboratorsIdRepository : GenericRepository<ColaboratorsIdReposito
         }
     }
 
-    public async Task<long> Add(long Id)
+
+    public async Task<Colaborator> GetColaboratorByIdAsync(long id)
+    {
+        try
+        {
+            ColaboratorsIdDataModel colaboratorDataModel = await _context.Set<ColaboratorsIdDataModel>()
+                .FirstAsync(c => c.Id == id);
+
+            Colaborator colaborator = _colaboratorsIdMapper.ToDomain(colaboratorDataModel);
+
+            return colaborator;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<Colaborator> Add(long Id)
     {
         try {
             ColaboratorsIdDataModel colaboratorsIdDataModel = _colaboratorsIdMapper.ToDataModel(Id);
@@ -43,7 +62,7 @@ public class ColaboratorsIdRepository : GenericRepository<ColaboratorsIdReposito
 
             ColaboratorsIdDataModel colaboratorIdDataModelSaved = colaboratorIdDataModelEntityEntry.Entity;
 
-            long colaboratorIdSaved = _colaboratorsIdMapper.ToDomain(colaboratorIdDataModelSaved);
+            Colaborator colaboratorIdSaved = _colaboratorsIdMapper.ToDomain(colaboratorIdDataModelSaved);
 
             return colaboratorIdSaved;    
         }

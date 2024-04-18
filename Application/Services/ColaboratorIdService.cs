@@ -1,5 +1,7 @@
 
+using Application.DTO;
 using Domain.IRepository;
+using Domain.Model;
 
 namespace Application.Services
 {
@@ -12,10 +14,13 @@ namespace Application.Services
             _colaboratorsIdRepository = colaboratorsIdRepository;
         }
 
-        public async Task<long> Add(long colabId)
+        public async Task<ColaboratorDTO> Add(long colabId)
         {
+            Colaborator colaboratorSaved = await _colaboratorsIdRepository.Add(colabId);
 
-            return await _colaboratorsIdRepository.Add(colabId);
+            ColaboratorDTO colabDTO = ColaboratorDTO.ToDTO(colaboratorSaved);
+
+            return colabDTO;
         }
     }
 }

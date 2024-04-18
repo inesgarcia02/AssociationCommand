@@ -5,41 +5,47 @@ using RabbitMQ.Client.Events;
 using System.Text;
 namespace WebApi.Controllers
 {
-    public class RabbitMQAssociationCConsumerController : IRabbitMQAssociationCConsumerController
+    public class RabbitMQAssociationConsumerController : IRabbitMQAssociationConsumerController
     {
         private List<string> _errorMessages = new List<string>();
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private readonly string _queueName;
+        private string _queueName;
 
-        public RabbitMQAssociationCConsumerController(IServiceScopeFactory serviceScopeFactory)
+        public RabbitMQAssociationConsumerController(IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _factory = new ConnectionFactory { HostName = "localhost" };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
+
             _channel.ExchangeDeclare(exchange: "associationCreated", type: ExchangeType.Fanout);
 
-            _queueName = _channel.QueueDeclare(queue: "associationCC",
+            Console.WriteLine(" [*] Waiting for messages from Association.");
+        }
+
+        public void ConfigQueue(string queueName)
+        {
+            _queueName = queueName;
+
+            _channel.QueueDeclare(queue: _queueName,
                                             durable: true,
                                             exclusive: false,
                                             autoDelete: false,
-                                            arguments: null).QueueName;
+                                            arguments: null);
 
             _channel.QueueBind(queue: _queueName,
                   exchange: "associationCreated",
                   routingKey: string.Empty);
-
-            Console.WriteLine(" [*] Waiting for messages from Association.");
         }
 
         public void StartConsuming()
         {
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received +=  async (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
