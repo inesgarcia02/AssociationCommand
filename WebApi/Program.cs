@@ -16,6 +16,7 @@ var associationQueueName = config["AssociationQueues:" + args[0]];
 var projectQueueName = config["ProjectQueues:" + args[0]];
 var colaboratorQueueName = config["ColaboratorQueues:" + args[0]];
 
+var port = GetPortForQueue(associationQueueName);
 
 // Add services to the container.
 
@@ -24,7 +25,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AbsanteeContext>(opt =>
     //opt.UseInMemoryDatabase("AbsanteeList")
     //opt.UseSqlite("Data Source=AbsanteeDatabase.sqlite")
-    opt.UseSqlite(Host.CreateApplicationBuilder().Configuration.GetConnectionString("AbsanteeDatabase"))
+    opt.UseSqlite(Host.CreateApplicationBuilder().Configuration.GetConnectionString(associationQueueName))
     );
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -96,4 +97,14 @@ rabbitMQColaboratorService.StartConsuming();
 
 app.MapControllers();
 
-app.Run();
+app.Run($"https://localhost:{port}");
+
+static int GetPortForQueue(string queueName)
+{
+    // Implement logic to map queue name to a unique port number
+    // Example: Assign a unique port number based on the queue name suffix
+    int basePort = 5010; // Start from port 5000
+    int queueIndex = int.Parse(queueName.Substring(1)); // Extract the numeric part of the queue name (assuming it starts with 'Q')
+    return basePort + queueIndex;
+}
+
