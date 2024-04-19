@@ -14,9 +14,9 @@ namespace Application.Services
             _colaboratorsIdRepository = colaboratorsIdRepository;
         }
 
-        public async Task<ColaboratorDTO> Add(long colabId)
+        public async Task<ColaboratorDTO> Add(ColaboratorDTO colabId)
         {
-            Colaborator colaboratorSaved = await _colaboratorsIdRepository.Add(colabId);
+            Colaborator colaboratorSaved = await _colaboratorsIdRepository.Add(colabId.Id);
 
             ColaboratorDTO colabDTO = ColaboratorDTO.ToDTO(colaboratorSaved);
 
