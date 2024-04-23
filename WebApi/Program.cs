@@ -69,6 +69,7 @@ builder.Services.AddTransient<ProjectService>();
 builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationConsumerController>();
 builder.Services.AddSingleton<IRabbitMQProjectConsumerController, RabbitMQProjectConsumerController>();
 builder.Services.AddSingleton<IRabbitMQColaboratorConsumerController, RabbitMQColaboratorConsumerController>();
+builder.Services.AddSingleton<IRabbitMQHolidayConsumerController, RabbitMQHolidayConsumerController>();
 
 var app = builder.Build();
 
@@ -86,14 +87,17 @@ app.UseAuthorization();
 var rabbitMQAssociationCConsumerService = app.Services.GetRequiredService<IRabbitMQAssociationConsumerController>();
 var rabbitMQProjectConsumerService = app.Services.GetRequiredService<IRabbitMQProjectConsumerController>();
 var rabbitMQColaboratorService = app.Services.GetRequiredService<IRabbitMQColaboratorConsumerController>();
+var rabbitMQHolidayService = app.Services.GetRequiredService<IRabbitMQHolidayConsumerController>();
 
 rabbitMQAssociationCConsumerService.ConfigQueue(associationQueueName);
 rabbitMQProjectConsumerService.ConfigQueue(projectQueueName);
 rabbitMQColaboratorService.ConfigQueue(colaboratorQueueName);
+rabbitMQHolidayService.ConfigQueue(associationQueueName);
 
 rabbitMQAssociationCConsumerService.StartConsuming();
 rabbitMQProjectConsumerService.StartConsuming();
 rabbitMQColaboratorService.StartConsuming();
+rabbitMQHolidayService.StartConsuming();
 
 app.MapControllers();
 
