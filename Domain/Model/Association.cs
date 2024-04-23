@@ -6,7 +6,12 @@ namespace Domain.Model
         private long _colaboratorId;
         private long _projectId;
         private Period _period;
+        private bool _fundamental;
 
+        public bool Fundamental
+        {
+            get { return _fundamental; }
+        }
 
         public DateOnly StartDate
         {
@@ -30,11 +35,12 @@ namespace Domain.Model
 
         public Period Period { get { return _period; } set { _period = value; } }
 
-        public Association(long colaboratorId, long projectId, DateOnly periodStart, DateOnly periodEnd)
+        public Association(long colaboratorId, long projectId, DateOnly periodStart, DateOnly periodEnd, bool fundamental)
         {
             _colaboratorId = colaboratorId;
             _projectId = projectId;
             _period = new Period(periodStart, periodEnd);
+            _fundamental = fundamental;
         }
 
 
