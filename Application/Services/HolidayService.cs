@@ -24,30 +24,41 @@ namespace Application.Services
             {
                 foreach (AssociationDTO association in associationsFiltradasDTO)
                 {
-                    // Verifica se há sobreposição entre as datas de associação e as datas de férias
-                    if (association.StartDate < holidayAmqpDTO.EndDate && association.EndDate > holidayAmqpDTO.StartDate)
-                    {
-                        // Calcula a duração da sobreposição em dias
-                        DateOnly overlapStart = association.StartDate > holidayAmqpDTO.StartDate ? association.StartDate : holidayAmqpDTO.StartDate;
-                        DateOnly overlapEnd = association.EndDate < holidayAmqpDTO.EndDate ? association.EndDate : holidayAmqpDTO.EndDate;
-                        int overlapDays = overlapEnd.Day - overlapStart.Day;
+                    int overlapDays = CalculateOverlap(association.StartDate, association.EndDate, holidayAmqpDTO.StartDate, holidayAmqpDTO.EndDate);
 
-                        if (overlapDays <= 2)
-                        {
-                            string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
-                            _holidayAmqpGateway.Publish("Ok " + stringholidayAmqpDTO);
-                        }
-                        else if (association.Fundamental.Equals(true))
-                        {
-                            string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
-                            _holidayAmqpGateway.Publish("Not Ok " + stringholidayAmqpDTO);
-                        }
+                    if (overlapDays <= 2)
+                    {
+                        string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
+                        _holidayAmqpGateway.Publish("Ok " + stringholidayAmqpDTO);
+                    }
+                    else if (!association.Fundamental)
+                    {
+                        string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
+                        _holidayAmqpGateway.Publish("Holiday Pendent " + stringholidayAmqpDTO);
+                    }
+                    else
+                    {
+                        string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
+                        _holidayAmqpGateway.Publish("Not Ok " + stringholidayAmqpDTO);
                     }
                 }
             }
             return null;
         }
 
+        private int CalculateOverlap(DateOnly associationStartDate, DateOnly associationEndDate, DateOnly holidayStartDate, DateOnly holidayEndDate)
+        {
+            // Verifica se há sobreposição entre as datas de associação e as datas de férias
+            if (associationStartDate < holidayEndDate && associationEndDate > holidayStartDate)
+            {
+                // Calcula a duração da sobreposição em dias
+                DateOnly overlapStart = associationStartDate > holidayStartDate ? associationStartDate : holidayStartDate;
+                DateOnly overlapEnd = associationEndDate < holidayEndDate ? associationEndDate : holidayEndDate;
+                int overlapDays = overlapEnd.Day - overlapStart.Day;
+                return overlapDays;
+            }
+            return 0; // Não há sobreposição
+        }
 
         public async Task<IEnumerable<AssociationDTO>> GetByColabIdInPeriod(long colabId, DateOnly startDate, DateOnly endDate)
         {
