@@ -45,7 +45,6 @@ builder.Services.AddTransient<IAssociationFactory, AssociationFactory>();
 builder.Services.AddTransient<AssociationMapper>();
 builder.Services.AddTransient<AssociationService>();
 builder.Services.AddTransient<AssociationCreatedAmqpGateway>();
-builder.Services.AddTransient<AssociationUpdatedAmqpGateway>();
 
 
 //builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationConsumerController>();

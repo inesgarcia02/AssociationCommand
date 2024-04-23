@@ -21,6 +21,12 @@ namespace Application.DTO
             EndDate = endDate;
         }
 
+        static public string Serialize(HolidayAmqpDTO holidayAmqpDTO)
+        {
+            var jsonMessage = JsonConvert.SerializeObject(holidayAmqpDTO);
+            return jsonMessage;
+        }
+
         static public HolidayAmqpDTO Deserialize(string jsonMessage)
         {
             var holidayAmqpDTO = JsonConvert.DeserializeObject<HolidayAmqpDTO>(jsonMessage);

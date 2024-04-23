@@ -1,6 +1,7 @@
 using Application.DTO;
 using Domain.IRepository;
 using Domain.Model;
+using Gateway;
 
 namespace Application.Services
 {
@@ -8,10 +9,12 @@ namespace Application.Services
     {
 
         private readonly IAssociationRepository _associationRepository;
+        private HolidayVerificationAmqpGateway _holidayAmqpGateway;
 
-        public HolidayService(IAssociationRepository associationRepository)
+        public HolidayService(IAssociationRepository associationRepository, HolidayVerificationAmqpGateway holidayVerificationAmqpGateway)
         {
             _associationRepository = associationRepository;
+            _holidayAmqpGateway = holidayVerificationAmqpGateway;
         }
 
         public async Task<HolidayAmqpDTO> Validations(HolidayAmqpDTO holidayAmqpDTO)
@@ -31,11 +34,13 @@ namespace Application.Services
 
                         if (overlapDays <= 2)
                         {
-
+                            string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
+                            _holidayAmqpGateway.Publish("Ok " + stringholidayAmqpDTO);
                         }
                         else if (association.Fundamental.Equals(true))
                         {
-
+                            string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
+                            _holidayAmqpGateway.Publish("Not Ok " + stringholidayAmqpDTO);
                         }
                     }
                 }

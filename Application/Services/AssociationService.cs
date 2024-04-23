@@ -10,18 +10,16 @@ using RabbitMQ.Client.Events;
 public class AssociationService
 {
     private AssociationCreatedAmqpGateway _associationCreatedAmqpGateway;
-    private AssociationUpdatedAmqpGateway _associationUpdatedAmqpGateway;
     private readonly IAssociationRepository _associationRepository;
     private readonly IColaboratorsIdRepository _colaboratorsRepository;
     private readonly IProjectRepository _projectRepository;
 
-    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationCreatedAmqpGateway associationCreatedAmqpGateway, AssociationUpdatedAmqpGateway associationUpdatedAmqpGateway)
+    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationCreatedAmqpGateway associationCreatedAmqpGateway)
     {
         _associationRepository = associationRepository;
         _colaboratorsRepository = colaboratorsRepository;
         _projectRepository = projectRepository;
         _associationCreatedAmqpGateway = associationCreatedAmqpGateway;
-        _associationUpdatedAmqpGateway = associationUpdatedAmqpGateway;
     }
 
     public async Task<IEnumerable<AssociationDTO>> GetAll()

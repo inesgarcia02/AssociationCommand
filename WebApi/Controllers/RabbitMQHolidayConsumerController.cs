@@ -52,7 +52,7 @@ namespace WebApi.Controllers
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var holidayService = scope.ServiceProvider.GetRequiredService<HolidayService>();
-                    // await colaboratorService.Add(colabDTO);
+                    await holidayService.Validations(holidayDTO);
                 }
 
                 Console.WriteLine($" [x] Received {message}");
