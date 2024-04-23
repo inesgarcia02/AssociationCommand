@@ -45,7 +45,7 @@ builder.Services.AddTransient<IAssociationFactory, AssociationFactory>();
 builder.Services.AddTransient<AssociationMapper>();
 builder.Services.AddTransient<AssociationService>();
 builder.Services.AddTransient<AssociationCreatedAmqpGateway>();
-
+builder.Services.AddTransient<AssociationPendentAmqpGateway>();
 
 //builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationConsumerController>();
 builder.Services.AddTransient<IColaboratorsIdRepository, ColaboratorsIdRepository>();
@@ -66,6 +66,7 @@ builder.Services.AddTransient<ProjectService>();
 // });
 
 builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationConsumerController>();
+builder.Services.AddSingleton<IRabbitMQAssociationConsumerController, RabbitMQAssociationPendingConsumerController>();
 builder.Services.AddSingleton<IRabbitMQProjectConsumerController, RabbitMQProjectConsumerController>();
 builder.Services.AddSingleton<IRabbitMQColaboratorConsumerController, RabbitMQColaboratorConsumerController>();
 builder.Services.AddSingleton<IRabbitMQHolidayConsumerController, RabbitMQHolidayConsumerController>();

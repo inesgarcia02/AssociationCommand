@@ -10,16 +10,18 @@ using RabbitMQ.Client.Events;
 public class AssociationService
 {
     private AssociationCreatedAmqpGateway _associationCreatedAmqpGateway;
+    private AssociationPendentAmqpGateway _associationPendentAmqpGateway;
     private readonly IAssociationRepository _associationRepository;
     private readonly IColaboratorsIdRepository _colaboratorsRepository;
     private readonly IProjectRepository _projectRepository;
 
-    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationCreatedAmqpGateway associationCreatedAmqpGateway)
+    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationCreatedAmqpGateway associationCreatedAmqpGateway, AssociationPendentAmqpGateway associationPendentAmqpGateway)
     {
         _associationRepository = associationRepository;
         _colaboratorsRepository = colaboratorsRepository;
         _projectRepository = projectRepository;
         _associationCreatedAmqpGateway = associationCreatedAmqpGateway;
+        _associationPendentAmqpGateway = associationPendentAmqpGateway;
     }
 
     public async Task<IEnumerable<AssociationDTO>> GetAll()
@@ -47,6 +49,7 @@ public class AssociationService
     public async Task<AssociationDTO> Add(AssociationDTO associationDTO, List<string> errorMessages)
     {
 
+
         bool exists = await VerifyAssociation(associationDTO, errorMessages);
 
         if (!exists)
@@ -72,6 +75,22 @@ public class AssociationService
             errorMessages.Add(ex.Message);
             return null;
         }
+    }
+
+    public async Task<AssociationDTO> PublishPending(AssociationDTO associationDTO, List<string> errorMessages)
+    {
+        bool verify = await VerifyAssociation(associationDTO, errorMessages);
+
+        if (verify)
+        {
+            string message = AssociationAmqpDTO.Serialize(associationDTO);
+            _associationPendentAmqpGateway.Publish(message);
+
+            return associationDTO;
+        }
+
+        return null;
+        
     }
 
     private async Task<bool> VerifyAssociation(AssociationDTO associationDTO, List<string> errorMessages)
