@@ -24,11 +24,11 @@ namespace WebApi.Controllers
 
             _channel.ExchangeDeclare(exchange: "holiday_logs", type: ExchangeType.Fanout);
 
-            Console.WriteLine(" [*] Waiting for messages from Colaborator.");
+            Console.WriteLine(" [*] Waiting for messages from Holiday.");
         }
         public void ConfigQueue(string queueName)
         {
-            _queueName = queueName + "holiday";
+            _queueName = "holiday" + queueName;
 
             _channel.QueueDeclare(queue: _queueName,
                                             durable: true,

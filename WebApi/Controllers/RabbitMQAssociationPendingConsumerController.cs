@@ -22,14 +22,14 @@ namespace WebApi.Controllers
             _channel = _connection.CreateModel();
 
 
-            _channel.ExchangeDeclare(exchange: "associationPendent", type: ExchangeType.Fanout);
+            _channel.ExchangeDeclare(exchange: "associationPendentResponse", type: ExchangeType.Fanout);
 
             Console.WriteLine(" [*] Waiting for messages from Association.");
         }
 
         public void ConfigQueue(string queueName)
         {
-            _queueName = queueName + "pending";
+            _queueName = "pending" + queueName;
 
             _channel.QueueDeclare(queue: _queueName,
                                             durable: true,
@@ -38,7 +38,7 @@ namespace WebApi.Controllers
                                             arguments: null);
 
             _channel.QueueBind(queue: _queueName,
-                  exchange: "associationPendent",
+                  exchange: "associationPendentResponse",
                   routingKey: string.Empty);
         }
 
