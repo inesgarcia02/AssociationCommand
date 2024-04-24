@@ -50,26 +50,33 @@ namespace WebApi.Controllers
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
 
-                AssociationDTO associationDTO = AssociationAmqpDTO.Deserialize(message);
-                using (var scope = _serviceScopeFactory.CreateScope())
+                if (message.StartsWith("Not Ok"))
                 {
-                    var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
+                    Console.WriteLine("Received 'Not Ok' message. No action required.");
+                }
+                else if (message.StartsWith("Ok"))
+                {
+                    // Remove o prefixo "Ok" da mensagem
+                    var jsonMessage = message.Substring(2);
 
-                    if (message.StartsWith("Ok"))
+                    // Desserializar o JSON restante
+                    AssociationDTO associationDTO = AssociationAmqpDTO.Deserialize(jsonMessage);
+
+                    // Processa o DTO
+                    using (var scope = _serviceScopeFactory.CreateScope())
                     {
+                        var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
                         await associationService.Add(associationDTO, _errorMessages);
                     }
-                    else {
-                        Console.WriteLine($"Association not approved.");
-                    }
-                    
-                }
 
-                Console.WriteLine($" [x] Received {message}");
+                    Console.WriteLine($"Received 'Ok' message and processed it: {jsonMessage}");
+                }
             };
+
             _channel.BasicConsume(queue: _queueName,
-                                autoAck: true,
-                                consumer: consumer);
+                                  autoAck: true,
+                                  consumer: consumer);
         }
+
     }
 }
