@@ -6,19 +6,16 @@ namespace Application.DTO
     {
         public long Id { get; set; }
         public long _colabId { get; set; }
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
-
+        public HolidayPeriodDTO _holidayPeriod { get; set; }
         public HolidayAmqpDTO()
         {
         }
 
-        public HolidayAmqpDTO(long colabId, long id, DateOnly startDate, DateOnly endDate)
+        public HolidayAmqpDTO(long colabId,long id,HolidayPeriodDTO holidayPeriod)
         {
             Id = id;
             _colabId = colabId;
-            StartDate = startDate;
-            EndDate = endDate;
+            _holidayPeriod = holidayPeriod;
         }
 
         static public string Serialize(HolidayAmqpDTO holidayAmqpDTO)

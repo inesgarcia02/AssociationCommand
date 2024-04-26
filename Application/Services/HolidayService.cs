@@ -19,12 +19,13 @@ namespace Application.Services
 
         public async Task<HolidayAmqpDTO> Validations(HolidayAmqpDTO holidayAmqpDTO)
         {
-            IEnumerable<AssociationDTO> associationsFiltradasDTO = await GetByColabIdInPeriod(holidayAmqpDTO._colabId, holidayAmqpDTO.StartDate, holidayAmqpDTO.EndDate);
+            
+            IEnumerable<AssociationDTO> associationsFiltradasDTO = await GetByColabIdInPeriod(holidayAmqpDTO._colabId, holidayAmqpDTO._holidayPeriod.StartDate, holidayAmqpDTO._holidayPeriod.EndDate);
             if (associationsFiltradasDTO != null)
             {
                 foreach (AssociationDTO association in associationsFiltradasDTO)
                 {
-                    int overlapDays = CalculateOverlap(association.StartDate, association.EndDate, holidayAmqpDTO.StartDate, holidayAmqpDTO.EndDate);
+                    int overlapDays = CalculateOverlap(association.StartDate, association.EndDate, holidayAmqpDTO._holidayPeriod.StartDate, holidayAmqpDTO._holidayPeriod.EndDate);
 
                     if (overlapDays <= 2)
                     {
@@ -42,6 +43,11 @@ namespace Application.Services
                         _holidayAmqpGateway.Publish("Not Ok " + stringholidayAmqpDTO);
                     }
                 }
+            }
+            else{
+                string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
+                _holidayAmqpGateway.Publish("Ok " + stringholidayAmqpDTO);
+                Console.WriteLine($" [x] Sent {stringholidayAmqpDTO}");
             }
             return null;
         }

@@ -22,7 +22,7 @@ namespace WebApi.Controllers
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-            _channel.ExchangeDeclare(exchange: "holiday_logs", type: ExchangeType.Fanout);
+            _channel.ExchangeDeclare(exchange: "holidayToValidate", type: ExchangeType.Fanout);
 
             Console.WriteLine(" [*] Waiting for messages from Holiday.");
         }
@@ -37,7 +37,7 @@ namespace WebApi.Controllers
                                             arguments: null);
 
             _channel.QueueBind(queue: _queueName,
-                  exchange: "holiday_logs",
+                  exchange: "holidayToValidate",
                   routingKey: string.Empty);
         }
 

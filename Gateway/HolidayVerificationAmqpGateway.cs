@@ -13,13 +13,13 @@ namespace Gateway
             _factory = new ConnectionFactory { HostName = "localhost" };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare(exchange: "holiday_logs", type: ExchangeType.Fanout);
+            _channel.ExchangeDeclare(exchange: "holidayPendentResponse", type: ExchangeType.Fanout);
         }
 
         public void Publish(string association)
         {
             var body = Encoding.UTF8.GetBytes(association);
-            _channel.BasicPublish(exchange: "holiday_logs",
+            _channel.BasicPublish(exchange: "holidayPendentResponse",
                                   routingKey: string.Empty,
                                   basicProperties: null,
                                   body: body);
