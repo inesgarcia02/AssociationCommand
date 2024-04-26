@@ -5,7 +5,7 @@ using RabbitMQ.Client.Events;
 using System.Text;
 namespace WebApi.Controllers
 {
-    public class RabbitMQAssociationPendingConsumerController : IRabbitMQAssociationConsumerController
+    public class RabbitMQAssociationPendingConsumerController : IRabbitMQConsumerController
     {
         private List<string> _errorMessages = new List<string>();
         private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -24,12 +24,12 @@ namespace WebApi.Controllers
 
             _channel.ExchangeDeclare(exchange: "associationPendentResponse", type: ExchangeType.Fanout);
 
-            Console.WriteLine(" [*] Waiting for messages from Association.");
+            Console.WriteLine(" [*] Waiting for messages from AssociationPendet.");
         }
 
         public void ConfigQueue(string queueName)
         {
-            _queueName = "pending" + queueName;
+            _queueName = "assocPending" + queueName;
 
             _channel.QueueDeclare(queue: _queueName,
                                             durable: true,
