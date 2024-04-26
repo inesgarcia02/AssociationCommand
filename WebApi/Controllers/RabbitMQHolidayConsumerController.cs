@@ -6,7 +6,7 @@ using RabbitMQ.Client.Events;
 
 namespace WebApi.Controllers
 {
-    public class RabbitMQHolidayConsumerController : IRabbitMQHolidayConsumerController
+    public class RabbitMQHolidayConsumerController : IRabbitMQConsumerController
     {
         private List<string> _errorMessages = new List<string>();
         private readonly IServiceScopeFactory _serviceScopeFactory;

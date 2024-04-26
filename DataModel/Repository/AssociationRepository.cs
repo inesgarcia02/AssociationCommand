@@ -4,7 +4,6 @@ using DataModel.Mapper;
 using Microsoft.EntityFrameworkCore;
 using DataModel.Model;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Gateway;
 
 namespace DataModel.Repository;
 
@@ -87,7 +86,7 @@ public class AssociationRepository : GenericRepository<Association>, IAssociatio
             .Where(a => a.ColaboratorId.Id == colabId && a.EndDate > startDate && a.StartDate < endDate)
             .ToListAsync();
 
-        IEnumerable<Association>  associations = _associationMapper.ToDomain(associationDataModel);
+        IEnumerable<Association> associations = _associationMapper.ToDomain(associationDataModel);
         return associations;
     }
 

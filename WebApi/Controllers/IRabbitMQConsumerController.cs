@@ -1,6 +1,6 @@
 namespace WebApi.Controllers
 {
-    public interface IRabbitMQHolidayConsumerController
+    public interface IRabbitMQConsumerController
     {
         public void StartConsuming();
         void ConfigQueue(string queueName);
