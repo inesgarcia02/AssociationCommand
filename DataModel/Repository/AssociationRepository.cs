@@ -84,6 +84,8 @@ public class AssociationRepository : GenericRepository<Association>, IAssociatio
     {
         IEnumerable<AssociationDataModel> associationDataModel = await _context.Set<AssociationDataModel>()
             .Where(a => a.ColaboratorId.Id == colabId && a.EndDate > startDate && a.StartDate < endDate)
+            .Include(a => a.ColaboratorId)
+            .Include(p => p.Project)
             .ToListAsync();
 
         IEnumerable<Association> associations = _associationMapper.ToDomain(associationDataModel);
