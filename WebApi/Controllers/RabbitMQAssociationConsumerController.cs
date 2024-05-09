@@ -50,7 +50,9 @@ namespace WebApi.Controllers
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
 
-                AssociationDTO associationDTO = AssociationAmqpDTO.Deserialize(message);
+                AssociationAmqpDTO associationAmqpDTO = AssociationAmqpDTO.Deserialize(message);
+                
+                AssociationDTO associationDTO = AssociationAmqpDTO.ToDTO(associationAmqpDTO);
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();

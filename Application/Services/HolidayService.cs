@@ -19,34 +19,39 @@ namespace Application.Services
 
         public async Task<HolidayAmqpDTO> Validations(HolidayAmqpDTO holidayAmqpDTO)
         {
-            
+           
             IEnumerable<AssociationDTO> associationsFiltradasDTO = await GetByColabIdInPeriod(holidayAmqpDTO._colabId, holidayAmqpDTO._holidayPeriod.StartDate, holidayAmqpDTO._holidayPeriod.EndDate);
             if (associationsFiltradasDTO != null)
             {
                 foreach (AssociationDTO association in associationsFiltradasDTO)
                 {
                     int overlapDays = CalculateOverlap(association.StartDate, association.EndDate, holidayAmqpDTO._holidayPeriod.StartDate, holidayAmqpDTO._holidayPeriod.EndDate);
-
+ 
                     if (overlapDays <= 2)
                     {
+                        holidayAmqpDTO._status="Ok";
                         string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
-                        _holidayAmqpGateway.Publish("Ok " + stringholidayAmqpDTO);
+                       
+                        _holidayAmqpGateway.Publish(stringholidayAmqpDTO);
                     }
                     else if (!association.Fundamental)
                     {
+                        holidayAmqpDTO._status="Holiday Pendent";
                         string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
-                        _holidayAmqpGateway.Publish("Holiday Pendent " + stringholidayAmqpDTO);
+                        _holidayAmqpGateway.Publish(stringholidayAmqpDTO);
                     }
                     else
                     {
+                        holidayAmqpDTO._status="Not Ok";
                         string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
-                        _holidayAmqpGateway.Publish("Not Ok " + stringholidayAmqpDTO);
+                        _holidayAmqpGateway.Publish(stringholidayAmqpDTO);
                     }
                 }
             }
             else{
+                holidayAmqpDTO._status="Ok";
                 string stringholidayAmqpDTO = HolidayAmqpDTO.Serialize(holidayAmqpDTO);
-                _holidayAmqpGateway.Publish("Ok " + stringholidayAmqpDTO);
+                _holidayAmqpGateway.Publish(stringholidayAmqpDTO);
                 Console.WriteLine($" [x] Sent {stringholidayAmqpDTO}");
             }
             return null;
