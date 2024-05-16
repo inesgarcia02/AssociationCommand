@@ -1,9 +1,9 @@
-using Domain.Model;
 using Domain.IRepository;
 using DataModel.Mapper;
 using Microsoft.EntityFrameworkCore;
 using DataModel.Model;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Domain.Model;
 
 namespace DataModel.Repository;
 
@@ -32,6 +32,17 @@ public class AssociationRepository : GenericRepository<Association>, IAssociatio
         {
             throw;
         }
+    }
+
+    public async Task<long> GetLastAssociationId()
+    {
+        // Buscar o último associationId no banco de dados
+        long lastAssociationId = await _context.Set<AssociationDataModel>()
+            .OrderByDescending(a => a.AssociationId)
+            .Select(a => a.AssociationId)
+            .FirstOrDefaultAsync();
+
+        return lastAssociationId;
     }
 
     public async Task<Association> GetAssociationsByIdAsync(long id)

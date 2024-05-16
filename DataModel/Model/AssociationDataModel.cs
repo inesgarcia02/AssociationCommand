@@ -7,6 +7,7 @@ public class AssociationDataModel
 {
     [Key]
     public long Id { get; set; }
+     public long AssociationId { get; set; }
     public ColaboratorsIdDataModel ColaboratorId { get; set; }
     public ProjectDataModel Project { get; set; }
     public DateOnly StartDate { get; set; }
@@ -18,6 +19,7 @@ public class AssociationDataModel
     public AssociationDataModel(Association association, ProjectDataModel project, ColaboratorsIdDataModel colaborator)
     {
         Id = association.Id;
+        AssociationId = association.AssociationId;
         StartDate = association.StartDate;
         EndDate = association.EndDate;
         Project = project;

@@ -48,17 +48,20 @@ public class AssociationService
 
     public async Task<AssociationDTO> Add(AssociationDTO associationDTO, List<string> errorMessages)
     {
-
-
         bool exists = await VerifyAssociation(associationDTO, errorMessages);
 
         if (!exists)
         {
             return null;
         }
-
         try
         {
+            // Obter o último associationId do banco de dados
+            long lastAssociationId = await _associationRepository.GetLastAssociationId();
+
+            // Incrementar o associationId
+            associationDTO.AssociationId = lastAssociationId + 1;
+            
             Association association = AssociationDTO.ToDomain(associationDTO);
 
             Association associationSaved = await _associationRepository.Add(association);
@@ -90,7 +93,7 @@ public class AssociationService
         }
 
         return null;
-        
+
     }
 
     private async Task<bool> VerifyAssociation(AssociationDTO associationDTO, List<string> errorMessages)

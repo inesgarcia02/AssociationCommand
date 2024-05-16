@@ -9,4 +9,5 @@ public interface IAssociationRepository : IGenericRepository<Association>
     Task<Association> Add(Association association);
     Task<bool> AssociationExists(long id);
     Task<IEnumerable<Association>> GetAssociationsByColabIdInPeriodAsync(long colabId, DateOnly startDate, DateOnly endDate);
+    Task<long> GetLastAssociationId();
 }
