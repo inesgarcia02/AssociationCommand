@@ -80,6 +80,30 @@ public class AssociationRepository : GenericRepository<Association>, IAssociatio
         }
     }
 
+    public async Task<Association> Update(Association association)
+    {
+        try
+        {
+            ProjectDataModel projectDataModel = await _context.Set<ProjectDataModel>()
+                .FirstAsync(p => p.Id == association.ProjectId);
+            ColaboratorsIdDataModel colaboratorDataModel = await _context.Set<ColaboratorsIdDataModel>()
+                .FirstAsync(c => c.Id == association.ColaboratorId);
+
+            AssociationDataModel associationDataModel = _associationMapper.ToDataModel(association, projectDataModel, colaboratorDataModel);
+            EntityEntry<AssociationDataModel> associationDataModelEntityEntry = _context.Set<AssociationDataModel>().Update(associationDataModel);
+
+            await _context.SaveChangesAsync();
+            AssociationDataModel associationDataModelSaved = associationDataModelEntityEntry.Entity;
+            Association associationSaved = _associationMapper.ToDomain(associationDataModel);
+
+            return associationSaved;
+        }
+        catch
+        {
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<Association>> GetAssociationsByColabIdInPeriodAsync(long colabId, DateOnly startDate, DateOnly endDate)
     {
         IEnumerable<AssociationDataModel> associationDataModel = await _context.Set<AssociationDataModel>()

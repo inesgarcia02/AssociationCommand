@@ -27,7 +27,6 @@ public class AssociationService
     public async Task<IEnumerable<AssociationDTO>> GetAll()
     {
         IEnumerable<Association> association = await _associationRepository.GetAssociationsAsync();
-
         IEnumerable<AssociationDTO> associationsDTO = AssociationDTO.ToDTO(association);
 
         return associationsDTO;
@@ -36,7 +35,6 @@ public class AssociationService
     public async Task<AssociationDTO> GetById(long id)
     {
         Association association = await _associationRepository.GetAssociationsByIdAsync(id);
-
         if (association != null)
         {
             AssociationDTO associationDTO = AssociationDTO.ToDTO(association);
@@ -45,53 +43,63 @@ public class AssociationService
         }
         return null;
     }
+    
     public async Task<AssociationDTO> Add(AssociationDTO associationDTO, List<string> errorMessages)
     {
         try
         {
-            // Tente adicionar a associação ao banco de dados
-            Association association = AssociationDTO.ToDomain(associationDTO);
-            // Verifica se a associação já existe com base nos detalhes da associação sendo adicionada
+            long lastAssociationId = await _associationRepository.GetLastAssociationId();
+            associationDTO.AssociationId = lastAssociationId + 1;
+        
             bool exists = await VerifyAssociation(associationDTO, errorMessages);
-
             if (!exists)
             {
                 return null;
             }
+            Association association = AssociationDTO.ToDomain(associationDTO);
             Association associationSaved = await _associationRepository.Add(association);
-
-            // Se a adição for bem-sucedida, retorne a associação
             AssociationDTO assoDTO = AssociationDTO.ToDTO(associationSaved);
             return assoDTO;
         }
         catch (ArgumentException ex)
         {
-            // Se ocorrer um erro ao adicionar a associação, adicione a mensagem de erro
             errorMessages.Add(ex.Message);
             return null;
         }
     }
 
-    public async Task<AssociationDTO> PublishPending(AssociationDTO associationDTO, List<string> errorMessages)
+    public async Task<AssociationDTO> AddFromRest(AssociationDTO associationDTO, List<string> errorMessages)
     {
-        bool verify = await VerifyAssociation(associationDTO, errorMessages);
-
-        if (verify)
+        AssociationDTO association = await Add(associationDTO, errorMessages);
+        if (association != null)
         {
-            // Obter o último associationId do banco de dados
-            long lastAssociationId = await _associationRepository.GetLastAssociationId();
-
-            // Incrementar o associationId
-            associationDTO.AssociationId = lastAssociationId + 1;
-
-            string message = AssociationAmqpDTO.Serialize(associationDTO);
+            string message = AssociationAmqpDTO.Serialize(association);
+            _associationCreatedAmqpGateway.Publish(message);
             _associationPendentAmqpGateway.Publish(message);
-
-            return associationDTO;
+            return association;
         }
-
         return null;
+    }
 
+    public async Task<AssociationDTO> Update(AssociationDTO associationDTO, List<string> errorMessages)
+    {
+        try
+        {
+            Association association = AssociationDTO.ToDomain(associationDTO);
+            bool exists = await VerifyAssociation(associationDTO, errorMessages);
+            if (!exists)
+            {
+                return null;
+            }
+            Association associationSaved = await _associationRepository.Update(association);
+            AssociationDTO assoDTO = AssociationDTO.ToDTO(associationSaved);
+            return assoDTO;
+        }
+        catch (ArgumentException ex)
+        {
+            errorMessages.Add(ex.Message);
+            return null;
+        }
     }
 
     private async Task<bool> VerifyAssociation(AssociationDTO associationDTO, List<string> errorMessages)
@@ -142,10 +150,8 @@ public class AssociationService
     private async Task<bool> CheckDates(AssociationDTO associationDTO)
     {
         Project p = await _projectRepository.GetProjectsByIdAsync(associationDTO.ProjectId);
-
         DateOnly startProject = p.StartDate;
         DateOnly? endProject = p.EndDate;
-
         DateOnly startAssociation = associationDTO.StartDate;
         DateOnly endAssociation = associationDTO.EndDate;
 
@@ -160,8 +166,6 @@ public class AssociationService
         {
             return true;
         }
-
-
         return false;
     }
 
@@ -179,7 +183,6 @@ public class AssociationService
                 return true;
             }
         }
-
         return false;
     }
 }

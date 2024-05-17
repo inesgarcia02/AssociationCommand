@@ -3,46 +3,38 @@ using Application.Services;
 using Gateway;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace WebApi.Controllers
 {
     public class RabbitMQAssociationPendingConsumerController : IRabbitMQConsumerController
     {
-        private List<string> _errorMessages = new List<string>();
-        private AssociationCreatedAmqpGateway _associationCreatedAmqpGateway;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private string _queueName;
+        private readonly string _queueName;
 
-        public RabbitMQAssociationPendingConsumerController(IServiceScopeFactory serviceScopeFactory, AssociationCreatedAmqpGateway associationCreatedAmqpGateway)
+        public RabbitMQAssociationPendingConsumerController(IServiceScopeFactory serviceScopeFactory)
         {
-            _associationCreatedAmqpGateway = associationCreatedAmqpGateway;
             _serviceScopeFactory = serviceScopeFactory;
             _factory = new ConnectionFactory { HostName = "localhost" };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-
             _channel.ExchangeDeclare(exchange: "associationPendentResponse", type: ExchangeType.Fanout);
-
             Console.WriteLine(" [*] Waiting for messages from AssociationPendet.");
+
+            _queueName = "assocPending"; // Nome da fila
+            ConfigQueue(_queueName);
         }
 
         public void ConfigQueue(string queueName)
         {
-            _queueName = "assocPending" + queueName;
-
-            _channel.QueueDeclare(queue: _queueName,
-                                            durable: true,
-                                            exclusive: false,
-                                            autoDelete: false,
-                                            arguments: null);
-
-            _channel.QueueBind(queue: _queueName,
-                  exchange: "associationPendentResponse",
-                  routingKey: string.Empty);
+            _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueBind(queue: queueName, exchange: "associationPendentResponse", routingKey: string.Empty);
         }
 
         public void StartConsuming()
@@ -55,37 +47,27 @@ namespace WebApi.Controllers
 
                 AssociationAmqpDTO associationAmqpDTO = AssociationAmqpDTO.Deserialize(message);
 
-                if (associationAmqpDTO.Status == "Not Ok")
-                {
-                    Console.WriteLine("Received 'Not Ok' message. No action required.");
-                }
-                else if (associationAmqpDTO.Status == "Ok")
+                if (associationAmqpDTO.Status == "Ok")
                 {
                     AssociationDTO associationDTO = AssociationAmqpDTO.ToDTO(associationAmqpDTO);
 
                     using (var scope = _serviceScopeFactory.CreateScope())
                     {
                         var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
-                        List<string> errorMessages = new List<string>();
-                        await associationService.Add(associationDTO, errorMessages);
 
-                        if (errorMessages.Any())
-                        {
-                            Console.WriteLine($"Errors occurred while processing the message: {string.Join(", ", errorMessages)}");
-                        }
-                        else
-                        {
-                            string message1 = AssociationAmqpDTO.Serialize(associationDTO);   
-                             _associationCreatedAmqpGateway.Publish(message1);
-                            Console.WriteLine($"Processed message successfully: {associationDTO}");
-                        }
+                        // Processa a associação
+                        await associationService.Update(associationDTO, new List<string>());
                     }
+                    // Confirma a mensagem manualmente após o processamento bem-sucedido
+                    _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                }
+                else if (associationAmqpDTO.Status == "Not Ok")
+                {
+                    Console.WriteLine("Received 'Not Ok' message. No action required.");
                 }
             };
 
-            _channel.BasicConsume(queue: _queueName,
-                                  autoAck: true,
-                                  consumer: consumer);
+            _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: consumer);
         }
     }
 }

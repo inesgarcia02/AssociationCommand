@@ -23,8 +23,8 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<AssociationDTO>> PostAssociation(AssociationDTO associationDTO)
         {
-            AssociationDTO assoDTO = await _associationService.PublishPending(associationDTO, _errorMessages);
-
+            AssociationDTO assoDTO = await _associationService.AddFromRest(associationDTO, _errorMessages);
+            
             if (assoDTO != null)
                 return Accepted(assoDTO);
             else

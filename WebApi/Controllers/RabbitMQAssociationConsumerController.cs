@@ -3,16 +3,16 @@ using Application.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
+
 namespace WebApi.Controllers
 {
     public class RabbitMQAssociationConsumerController : IRabbitMQConsumerController
     {
-        private List<string> _errorMessages = new List<string>();
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private string _queueName;
+        private readonly string _queueName;
 
         public RabbitMQAssociationConsumerController(IServiceScopeFactory serviceScopeFactory)
         {
@@ -20,26 +20,16 @@ namespace WebApi.Controllers
             _factory = new ConnectionFactory { HostName = "localhost" };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
-
-
             _channel.ExchangeDeclare(exchange: "associationCreated", type: ExchangeType.Fanout);
-
             Console.WriteLine(" [*] Waiting for messages from Association.");
+            _queueName = "association";
+            ConfigQueue(_queueName);
         }
 
         public void ConfigQueue(string queueName)
         {
-            _queueName = "association" + queueName;
-
-            _channel.QueueDeclare(queue: _queueName,
-                                            durable: true,
-                                            exclusive: false,
-                                            autoDelete: false,
-                                            arguments: null);
-
-            _channel.QueueBind(queue: _queueName,
-                  exchange: "associationCreated",
-                  routingKey: string.Empty);
+            _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueBind(queue: queueName, exchange: "associationCreated", routingKey: string.Empty);
         }
 
         public void StartConsuming()
@@ -51,20 +41,22 @@ namespace WebApi.Controllers
                 var message = Encoding.UTF8.GetString(body);
 
                 AssociationAmqpDTO associationAmqpDTO = AssociationAmqpDTO.Deserialize(message);
-                
                 AssociationDTO associationDTO = AssociationAmqpDTO.ToDTO(associationAmqpDTO);
+
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
 
-                    await associationService.Add(associationDTO, _errorMessages);
+                    // Processa a associação
+                    await associationService.Add(associationDTO, new List<string>());
+                     Console.WriteLine($"Processed message successfully: {associationDTO}");
                 }
 
-                Console.WriteLine($" [x] Received {message}");
+                // Confirma a mensagem manualmente após o processamento bem-sucedido
+                _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
             };
-            _channel.BasicConsume(queue: _queueName,
-                                autoAck: true,
-                                consumer: consumer);
+
+            _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: consumer);
         }
     }
 }

@@ -13,7 +13,8 @@ public class AssociationDataModel
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public bool Fundamental { get; set; }
-
+    public bool IsPendent { get; set; }
+    
     public AssociationDataModel() { }
 
     public AssociationDataModel(Association association, ProjectDataModel project, ColaboratorsIdDataModel colaborator)
@@ -25,5 +26,6 @@ public class AssociationDataModel
         Project = project;
         ColaboratorId = colaborator;
         Fundamental = association.Fundamental;
+        IsPendent = association.IsPendent;
     }
 }

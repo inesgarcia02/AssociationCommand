@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Newtonsoft.Json;
- 
+
 namespace Application.DTO
 {
     public class AssociationAmqpDTO
@@ -11,14 +11,15 @@ namespace Application.DTO
         public long ProjectId { get; set; }
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
-        public bool Fundamental {get;set;}
-        public string Status{get;set;}
- 
- 
+        public bool Fundamental { get; set; }
+        public string Status { get; set; }
+        public bool IsPendent { get; set; }
+
         public AssociationAmqpDTO() { }
- 
-        public AssociationAmqpDTO(long associationId, long colabId, long projectId, DateOnly startDate, DateOnly endDate, bool fundamental, string status)
+
+        public AssociationAmqpDTO(long id, long associationId, long colabId, long projectId, DateOnly startDate, DateOnly endDate, bool fundamental, string status, bool isPendent)
         {
+            Id = id;
             AssociationId = associationId;
             ColaboratorId = colabId;
             ProjectId = projectId;
@@ -26,23 +27,25 @@ namespace Application.DTO
             EndDate = endDate;
             Fundamental = fundamental;
             Status = status;
+            IsPendent = isPendent;
         }
- 
+
         static public string Serialize(AssociationDTO associationDTO)
         {
             var jsonMessage = JsonConvert.SerializeObject(associationDTO);
             return jsonMessage;
         }
- 
+
         static public AssociationAmqpDTO Deserialize(string jsonMessage)
         {
             var associationAmqpDTO = JsonConvert.DeserializeObject<AssociationAmqpDTO>(jsonMessage);
             return associationAmqpDTO!;
         }
- 
-        static public AssociationDTO ToDTO(AssociationAmqpDTO assoAmqpDTO){
-            AssociationDTO associationDTO = new AssociationDTO(assoAmqpDTO.AssociationId, assoAmqpDTO.ColaboratorId, assoAmqpDTO.ProjectId, assoAmqpDTO.StartDate, assoAmqpDTO.EndDate, assoAmqpDTO.Fundamental);
- 
+
+        static public AssociationDTO ToDTO(AssociationAmqpDTO assoAmqpDTO)
+        {
+            AssociationDTO associationDTO = new AssociationDTO(assoAmqpDTO.Id, assoAmqpDTO.AssociationId, assoAmqpDTO.ColaboratorId, assoAmqpDTO.ProjectId, assoAmqpDTO.StartDate, assoAmqpDTO.EndDate, assoAmqpDTO.Fundamental, assoAmqpDTO.IsPendent);
+
             return associationDTO;
         }
     }
