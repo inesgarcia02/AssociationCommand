@@ -1,27 +1,21 @@
 namespace DataModel.Mapper;
 
 using DataModel.Model;
-
 using Domain.Model;
 using Domain.Factory;
-using Domain.IRepository;
 
 public class AssociationMapper
 {
     private IAssociationFactory _associationFactory;
-    private IColaboratorsIdRepository _colaboratorRepository;
-    private IProjectRepository _projectRepository;
 
-    public AssociationMapper(IAssociationFactory associationFactory, IColaboratorsIdRepository colaboratorRepository, IProjectRepository projectRepository)
+    public AssociationMapper(IAssociationFactory associationFactory)
     {
         _associationFactory = associationFactory;
-        _colaboratorRepository = colaboratorRepository;
-        _projectRepository = projectRepository;
     }
 
     public Association ToDomain(AssociationDataModel associationDM)
     {
-        Association associationDomain = _associationFactory.NewAssociation(associationDM.ColaboratorId.Id, associationDM.Project.Id, 
+        Association associationDomain = _associationFactory.NewAssociation(associationDM.AssociationId ,associationDM.ColaboratorId.Id, associationDM.Project.Id, 
                                                     associationDM.StartDate,associationDM.EndDate, associationDM.Fundamental);
         associationDomain.Id = associationDM.Id;
         return associationDomain;
@@ -37,7 +31,6 @@ public class AssociationMapper
 
             associationsDomain.Add(associationDomain);
         }
-
         return associationsDomain.AsEnumerable();
     }
 

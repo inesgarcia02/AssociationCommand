@@ -92,8 +92,25 @@ public class AssociationRepository : GenericRepository<Association>, IAssociatio
         return associations;
     }
 
-    public async Task<bool> AssociationExists(long id)
+    public async Task<long> GetLastAssociationId()
     {
-        return await _context.Set<AssociationDataModel>().AnyAsync(h => h.Id == id);
+        // Buscar o último associationId na base de dados
+        long lastAssociationId = await _context.Set<AssociationDataModel>()
+            .OrderByDescending(a => a.AssociationId)
+            .Select(a => a.AssociationId)
+            .FirstOrDefaultAsync();
+
+        return lastAssociationId;
+    }
+
+    public async Task<bool> AssociationExists(Association association)
+    {
+        return await _context.Set<AssociationDataModel>()
+            .AnyAsync(a =>
+            a.AssociationId == association.AssociationId &&
+                a.ColaboratorId.Id == association.ColaboratorId &&
+                a.Project.Id == association.ProjectId &&
+                a.StartDate == association.StartDate &&
+                a.EndDate == association.EndDate);
     }
 }

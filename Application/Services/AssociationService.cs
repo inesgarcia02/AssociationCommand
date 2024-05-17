@@ -45,33 +45,28 @@ public class AssociationService
         }
         return null;
     }
-
     public async Task<AssociationDTO> Add(AssociationDTO associationDTO, List<string> errorMessages)
     {
-
-
-        bool exists = await VerifyAssociation(associationDTO, errorMessages);
-
-        if (!exists)
-        {
-            return null;
-        }
-
         try
         {
+            // Tente adicionar a associação ao banco de dados
             Association association = AssociationDTO.ToDomain(associationDTO);
+            // Verifica se a associação já existe com base nos detalhes da associação sendo adicionada
+            bool exists = await VerifyAssociation(associationDTO, errorMessages);
 
+            if (!exists)
+            {
+                return null;
+            }
             Association associationSaved = await _associationRepository.Add(association);
 
+            // Se a adição for bem-sucedida, retorne a associação
             AssociationDTO assoDTO = AssociationDTO.ToDTO(associationSaved);
-
-            string associationAmqpDTO = AssociationAmqpDTO.Serialize(assoDTO);
-            _associationCreatedAmqpGateway.Publish(associationAmqpDTO);
-
             return assoDTO;
         }
         catch (ArgumentException ex)
         {
+            // Se ocorrer um erro ao adicionar a associação, adicione a mensagem de erro
             errorMessages.Add(ex.Message);
             return null;
         }
@@ -83,6 +78,12 @@ public class AssociationService
 
         if (verify)
         {
+            // Obter o último associationId do banco de dados
+            long lastAssociationId = await _associationRepository.GetLastAssociationId();
+
+            // Incrementar o associationId
+            associationDTO.AssociationId = lastAssociationId + 1;
+
             string message = AssociationAmqpDTO.Serialize(associationDTO);
             _associationPendentAmqpGateway.Publish(message);
 
@@ -90,45 +91,53 @@ public class AssociationService
         }
 
         return null;
-        
+
     }
 
     private async Task<bool> VerifyAssociation(AssociationDTO associationDTO, List<string> errorMessages)
     {
-        bool aExists = await _associationRepository.AssociationExists(associationDTO.Id);
+
+        Association association = AssociationDTO.ToDomain(associationDTO);
+        // Verifica se a associação já existe com base nos detalhes fornecidos
+        bool aExists = await _associationRepository.AssociationExists(association);
         if (aExists)
         {
-            Console.WriteLine("Association already exists.");
             errorMessages.Add("Association already exists.");
             return false;
         }
 
+        // Verifica se o colaborador existe
         bool colabExists = await _colaboratorsRepository.ColaboratorExists(associationDTO.ColaboratorId);
         if (!colabExists)
         {
-            Console.WriteLine("Colaborator doesn't exist.");
             errorMessages.Add("Colaborator doesn't exist.");
             return false;
         }
 
+        // Verifica se o projeto existe
         bool projectExists = await _projectRepository.ProjectExists(associationDTO.ProjectId);
         if (!projectExists)
         {
-            Console.WriteLine("Project doesn't exist.");
             errorMessages.Add("Project doesn't exist.");
             return false;
         }
 
+        // Verifica se as datas da associação correspondem ao projeto
         if (!await CheckDates(associationDTO))
         {
-            Console.WriteLine("Association dates don't match with project.");
             errorMessages.Add("Association dates don't match with project.");
             return false;
         }
+        if (await CheckDatesAssociation(associationDTO))
+        {
+            Console.WriteLine("Colaborator already has an association in this period.");
+            errorMessages.Add("Colaborator already has an association in this period.");
+            return false;
+        }
 
+        // Se todas as verificações passarem, retorna true
         return true;
     }
-
 
     private async Task<bool> CheckDates(AssociationDTO associationDTO)
     {
@@ -152,6 +161,24 @@ public class AssociationService
             return true;
         }
 
+
+        return false;
+    }
+
+    private async Task<bool> CheckDatesAssociation(AssociationDTO associationDTO)
+    {
+        IEnumerable<Association> associations = await _associationRepository.GetAssociationsByColabIdInPeriodAsync(associationDTO.ColaboratorId, associationDTO.StartDate, associationDTO.EndDate);
+
+        foreach (var association in associations)
+        {
+            if (((associationDTO.StartDate >= association.StartDate &&
+                  associationDTO.StartDate <= association.EndDate) ||
+                 (associationDTO.EndDate >= association.StartDate && associationDTO.EndDate <= association.EndDate))
+                && association.ProjectId == associationDTO.ProjectId)
+            {
+                return true;
+            }
+        }
 
         return false;
     }

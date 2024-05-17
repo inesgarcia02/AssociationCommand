@@ -8,7 +8,7 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class AssociationController : ControllerBase
-    {   
+    {
         private readonly AssociationService _associationService;
 
         List<string> _errorMessages = new List<string>();
@@ -25,7 +25,7 @@ namespace WebApi.Controllers
         {
             AssociationDTO assoDTO = await _associationService.PublishPending(associationDTO, _errorMessages);
 
-            if(assoDTO != null)
+            if (assoDTO != null)
                 return Accepted(assoDTO);
             else
                 return BadRequest(_errorMessages);

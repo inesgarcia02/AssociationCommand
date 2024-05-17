@@ -1,5 +1,6 @@
 using Application.DTO;
 using Application.Services;
+using Gateway;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -8,14 +9,16 @@ namespace WebApi.Controllers
     public class RabbitMQAssociationPendingConsumerController : IRabbitMQConsumerController
     {
         private List<string> _errorMessages = new List<string>();
+        private AssociationCreatedAmqpGateway _associationCreatedAmqpGateway;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private string _queueName;
 
-        public RabbitMQAssociationPendingConsumerController(IServiceScopeFactory serviceScopeFactory)
+        public RabbitMQAssociationPendingConsumerController(IServiceScopeFactory serviceScopeFactory, AssociationCreatedAmqpGateway associationCreatedAmqpGateway)
         {
+            _associationCreatedAmqpGateway = associationCreatedAmqpGateway;
             _serviceScopeFactory = serviceScopeFactory;
             _factory = new ConnectionFactory { HostName = "localhost" };
             _connection = _factory.CreateConnection();
@@ -58,20 +61,25 @@ namespace WebApi.Controllers
                 }
                 else if (associationAmqpDTO.Status == "Ok")
                 {
-                    // Remove o prefixo "Ok" da mensagem
-                    //var jsonMessage = message.Substring(2);
-
-                    // Desserializar o JSON restante
                     AssociationDTO associationDTO = AssociationAmqpDTO.ToDTO(associationAmqpDTO);
 
-                    // Processa o DTO
                     using (var scope = _serviceScopeFactory.CreateScope())
                     {
                         var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
-                        await associationService.Add(associationDTO, _errorMessages);
-                    }
+                        List<string> errorMessages = new List<string>();
+                        await associationService.Add(associationDTO, errorMessages);
 
-                    Console.WriteLine($"Received 'Ok' message and processed it: {associationDTO}");
+                        if (errorMessages.Any())
+                        {
+                            Console.WriteLine($"Errors occurred while processing the message: {string.Join(", ", errorMessages)}");
+                        }
+                        else
+                        {
+                            string message1 = AssociationAmqpDTO.Serialize(associationDTO);   
+                             _associationCreatedAmqpGateway.Publish(message1);
+                            Console.WriteLine($"Processed message successfully: {associationDTO}");
+                        }
+                    }
                 }
             };
 
@@ -79,6 +87,5 @@ namespace WebApi.Controllers
                                   autoAck: true,
                                   consumer: consumer);
         }
-
     }
 }
