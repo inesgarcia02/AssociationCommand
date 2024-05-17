@@ -49,7 +49,7 @@ public class AssociationDTO
         Association association = new Association(associationDTO.ColaboratorId, associationDTO.ProjectId, associationDTO.StartDate,
                                         associationDTO.EndDate, associationDTO.Fundamental);
 
-        association.Id = associationDTO.Id;
+        // association.Id = associationDTO.Id;
 
         return association;
     }

@@ -42,13 +42,60 @@ namespace WebApi.Controllers
                   routingKey: string.Empty);
         }
 
+        // public void StartConsuming()
+        // {
+        //     var consumer = new EventingBasicConsumer(_channel);
+        //     consumer.Received += async (model, ea) =>
+        //     {
+        //         var body = ea.Body.ToArray();
+        //         var message = Encoding.UTF8.GetString(body);
+        //
+        //         AssociationAmqpDTO associationAmqpDTO = AssociationAmqpDTO.Deserialize(message);
+        //
+        //         if (associationAmqpDTO.Status == "Not Ok")
+        //         {
+        //             Console.WriteLine("Received 'Not Ok' message. No action required.");
+        //         }
+        //         else if (associationAmqpDTO.Status == "Ok")
+        //         {
+        //             // Remove o prefixo "Ok" da mensagem
+        //             //var jsonMessage = message.Substring(2);
+        //
+        //             // Desserializar o JSON restante
+        //             AssociationDTO associationDTO = AssociationAmqpDTO.ToDTO(associationAmqpDTO);
+        //
+        //             // Processa o DTO
+        //             using (var scope = _serviceScopeFactory.CreateScope())
+        //             {
+        //                 var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
+        //                 await associationService.Add(associationDTO, _errorMessages);
+        //             }
+        //
+        //             Console.WriteLine($"Received 'Ok' message and processed it: {associationDTO}");
+        //         }
+        //     };
+        //
+        //     _channel.BasicConsume(queue: _queueName,
+        //                           autoAck: true,
+        //                           consumer: consumer);
+        // }
+
         public void StartConsuming()
         {
+            var processedMessages = new HashSet<string>();
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+
+                if (processedMessages.Contains(message))
+                {
+                    Console.WriteLine("Duplicate message detected, skipping processing.");
+                    return;
+                }
+
+                processedMessages.Add(message);
 
                 AssociationAmqpDTO associationAmqpDTO = AssociationAmqpDTO.Deserialize(message);
 
@@ -58,13 +105,8 @@ namespace WebApi.Controllers
                 }
                 else if (associationAmqpDTO.Status == "Ok")
                 {
-                    // Remove o prefixo "Ok" da mensagem
-                    //var jsonMessage = message.Substring(2);
-
-                    // Desserializar o JSON restante
                     AssociationDTO associationDTO = AssociationAmqpDTO.ToDTO(associationAmqpDTO);
 
-                    // Processa o DTO
                     using (var scope = _serviceScopeFactory.CreateScope())
                     {
                         var associationService = scope.ServiceProvider.GetRequiredService<AssociationService>();
@@ -76,8 +118,8 @@ namespace WebApi.Controllers
             };
 
             _channel.BasicConsume(queue: _queueName,
-                                  autoAck: true,
-                                  consumer: consumer);
+                autoAck: true,
+                consumer: consumer);
         }
 
     }

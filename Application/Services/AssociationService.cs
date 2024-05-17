@@ -2,7 +2,6 @@ namespace Application.Services;
 
 using Domain.Model;
 using Application.DTO;
-
 using Domain.IRepository;
 using Gateway;
 using RabbitMQ.Client.Events;
@@ -15,7 +14,10 @@ public class AssociationService
     private readonly IColaboratorsIdRepository _colaboratorsRepository;
     private readonly IProjectRepository _projectRepository;
 
-    public AssociationService(IAssociationRepository associationRepository, IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository, AssociationCreatedAmqpGateway associationCreatedAmqpGateway, AssociationPendentAmqpGateway associationPendentAmqpGateway)
+    public AssociationService(IAssociationRepository associationRepository,
+        IColaboratorsIdRepository colaboratorsRepository, IProjectRepository projectRepository,
+        AssociationCreatedAmqpGateway associationCreatedAmqpGateway,
+        AssociationPendentAmqpGateway associationPendentAmqpGateway)
     {
         _associationRepository = associationRepository;
         _colaboratorsRepository = colaboratorsRepository;
@@ -43,13 +45,12 @@ public class AssociationService
 
             return associationDTO;
         }
+
         return null;
     }
 
     public async Task<AssociationDTO> Add(AssociationDTO associationDTO, List<string> errorMessages)
     {
-
-
         bool exists = await VerifyAssociation(associationDTO, errorMessages);
 
         if (!exists)
@@ -65,8 +66,8 @@ public class AssociationService
 
             AssociationDTO assoDTO = AssociationDTO.ToDTO(associationSaved);
 
-            string associationAmqpDTO = AssociationAmqpDTO.Serialize(assoDTO);
-            _associationCreatedAmqpGateway.Publish(associationAmqpDTO);
+            // string associationAmqpDTO = AssociationAmqpDTO.Serialize(assoDTO);
+            // _associationCreatedAmqpGateway.Publish(associationAmqpDTO);
 
             return assoDTO;
         }
@@ -79,18 +80,17 @@ public class AssociationService
 
     public async Task<AssociationDTO> PublishPending(AssociationDTO associationDTO, List<string> errorMessages)
     {
-        bool verify = await VerifyAssociation(associationDTO, errorMessages);
+        AssociationDTO associationDTOSaved = await Add(associationDTO, errorMessages);
 
-        if (verify)
+        // bool verify = await VerifyAssociation(associationDTO, errorMessages);
+
+        if (associationDTOSaved is not null)
         {
             string message = AssociationAmqpDTO.Serialize(associationDTO);
             _associationPendentAmqpGateway.Publish(message);
-
-            return associationDTO;
         }
 
-        return null;
-        
+        return associationDTO;
     }
 
     private async Task<bool> VerifyAssociation(AssociationDTO associationDTO, List<string> errorMessages)
@@ -125,6 +125,12 @@ public class AssociationService
             errorMessages.Add("Association dates don't match with project.");
             return false;
         }
+        if (await CheckDatesAssociation(associationDTO))
+        {
+            Console.WriteLine("Colaborator already has an association in this period.");
+            errorMessages.Add("Colaborator already has an association in this period.");
+            return false;
+        }
 
         return true;
     }
@@ -152,6 +158,24 @@ public class AssociationService
             return true;
         }
 
+
+        return false;
+    }
+
+    private async Task<bool> CheckDatesAssociation(AssociationDTO associationDTO)
+    {
+        IEnumerable<Association> associations = await _associationRepository.GetAssociationsByColabIdInPeriodAsync(associationDTO.ColaboratorId, associationDTO.StartDate, associationDTO.EndDate);
+
+        foreach (var association in associations)
+        {
+            if (((associationDTO.StartDate >= association.StartDate &&
+                  associationDTO.StartDate <= association.EndDate) ||
+                 (associationDTO.EndDate >= association.StartDate && associationDTO.EndDate <= association.EndDate))
+                && association.ProjectId == associationDTO.ProjectId)
+            {
+                return true;
+            }
+        }
 
         return false;
     }
