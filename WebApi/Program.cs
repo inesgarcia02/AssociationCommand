@@ -12,9 +12,10 @@ using WebApi.Controllers;
 var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
+args[0]="Repl1";
 var queueName = config["Queues:" + args[0]];
 
-var port = GetPortForQueue(queueName);
+var port = config["Ports:" + args[0]];
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -98,9 +99,11 @@ app.MapControllers();
 
 app.Run($"https://localhost:{port}");
 
-static int GetPortForQueue(string queueName)
-{
-    int basePort = 5030;
-    int queueIndex = int.Parse(queueName.Substring(1)); //Extract the numeric part of the queue name
-    return basePort + queueIndex;
-}
+// static int GetPortForQueue(string queueName)
+// {
+//     int basePort = 5030;
+//     int queueIndex = int.Parse(queueName.Substring(1)); //Extract the numeric part of the queue name
+//     return basePort + queueIndex;
+// }
+
+public partial class Program { }
