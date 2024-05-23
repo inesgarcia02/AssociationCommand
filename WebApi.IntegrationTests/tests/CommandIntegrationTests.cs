@@ -1,13 +1,10 @@
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Application.DTO;
 using DataModel.Repository;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using WebApi.IntegrationTests.Helpers;
-using Xunit;
 
 namespace WebApi.IntegrationTests.Tests
 {
@@ -28,10 +25,8 @@ namespace WebApi.IntegrationTests.Tests
         [Fact]
         public async Task PostAssociation_ReturnsAccepted_WhenValidAssociation()
         {
-
             // Arrange
             var client = _factory.CreateClient();
-            // Arrange
             using (var scope = _factory.Services.CreateScope())
             {
                 var scopedServices = scope.ServiceProvider;
@@ -91,6 +86,43 @@ namespace WebApi.IntegrationTests.Tests
 
             // Assert
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task PostAssociation_ReturnsConflict_WhenDuplicateAssociation()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var scopedServices = scope.ServiceProvider;
+                var db = scopedServices.GetRequiredService<AbsanteeContext>();
+
+                Utilities.ReinitializeDbForTests(db);
+            }
+            var validAssociationDTO = new
+            {
+                ColaboratorId = 1,
+                ProjectId = 1,
+                StartDate = DateOnly.FromDateTime(DateTime.Now),
+                EndDate = DateOnly.FromDateTime(DateTime.Now.AddDays(10)),
+                Fundamental = true
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(validAssociationDTO), Encoding.UTF8, "application/json");
+
+            // Act
+            var firstResponse = await client.PostAsync("/api/Association", content);
+
+            // Assert first post
+            firstResponse.EnsureSuccessStatusCode();
+            Assert.Equal(System.Net.HttpStatusCode.Accepted, firstResponse.StatusCode);
+
+            // Act duplicate post
+            var duplicateResponse = await client.PostAsync("/api/Association", content);
+
+            // Assert duplicate post
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, duplicateResponse.StatusCode);
         }
     }
 }
