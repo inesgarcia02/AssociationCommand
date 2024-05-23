@@ -16,10 +16,10 @@ namespace WebApi.IntegrationTests.Tests
         public CommandIntegrationTests(IntegrationTestsWebAppFactory<Program> factory)
         {
             _factory = factory;
-            _client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            {
-                AllowAutoRedirect = false
-            });
+            // _client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            // {
+            //     AllowAutoRedirect = false
+            // });
         }
 
         [Fact]
@@ -56,6 +56,11 @@ namespace WebApi.IntegrationTests.Tests
             var returnedDto = JsonConvert.DeserializeObject<AssociationDTO>(responseString);
 
             Assert.NotNull(returnedDto);
+            Assert.Equal(associationDTO.ColaboratorId, returnedDto.ColaboratorId);
+            Assert.Equal(associationDTO.ProjectId, returnedDto.ProjectId);
+            Assert.Equal(associationDTO.StartDate, returnedDto.StartDate);
+            Assert.Equal(associationDTO.EndDate, returnedDto.EndDate);
+            Assert.Equal(associationDTO.Fundamental, returnedDto.Fundamental);
         }
 
         [Fact]

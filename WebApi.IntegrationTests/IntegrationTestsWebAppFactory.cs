@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WebApi.Controllers;
 
@@ -13,6 +14,25 @@ public class IntegrationTestsWebAppFactory<TProgram> : WebApplicationFactory<TPr
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // based on https://stackoverflow.com/questions/72679169/override-host-configuration-in-integration-testing-using-asp-net-core-6-minimal
+        var configurationValues = new Dictionary<string, string>
+        {
+            { "replicaName", "repl1" }
+        };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(configurationValues)
+            .Build();
+
+        builder
+            // This configuration is used during the creation of the application
+            // (e.g. BEFORE WebApplication.CreateBuilder(args) is called in Program.cs).
+            .UseConfiguration(configuration)
+            .ConfigureAppConfiguration(configurationBuilder =>
+            {
+                // This overrides configuration settings that were added as part 
+                // of building the Host (e.g. calling WebApplication.CreateBuilder(args)).
+                configurationBuilder.AddInMemoryCollection(configurationValues);
+            });
         builder.ConfigureServices((context, services) =>
         {
             // Remove the AppDbContext registration
@@ -46,12 +66,6 @@ public class IntegrationTestsWebAppFactory<TProgram> : WebApplicationFactory<TPr
                 var connection = container.GetRequiredService<DbConnection>();
                 options.UseSqlite(connection);
             });
-            // Register required RabbitMQ services
-            services.AddSingleton<IRabbitMQConsumerController, RabbitMQAssociationConsumerController>();
-            services.AddSingleton<IRabbitMQConsumerController, RabbitMQAssociationPendingConsumerController>();
-            services.AddSingleton<IRabbitMQConsumerController, RabbitMQProjectConsumerController>();
-            services.AddSingleton<IRabbitMQConsumerController, RabbitMQColaboratorConsumerController>();
-            services.AddSingleton<IRabbitMQConsumerController, RabbitMQHolidayConsumerController>();
         });
 
         builder.UseEnvironment("Development");
