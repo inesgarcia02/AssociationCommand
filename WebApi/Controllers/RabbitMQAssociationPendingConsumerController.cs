@@ -1,11 +1,8 @@
 using Application.DTO;
 using Application.Services;
-using Gateway;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace WebApi.Controllers
 {

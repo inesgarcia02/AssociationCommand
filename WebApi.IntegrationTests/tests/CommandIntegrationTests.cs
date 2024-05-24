@@ -1,7 +1,6 @@
 using System.Text;
 using Application.DTO;
 using DataModel.Repository;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using WebApi.IntegrationTests.Helpers;
@@ -117,13 +116,6 @@ namespace WebApi.IntegrationTests.Tests
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(validAssociationDTO), Encoding.UTF8, "application/json");
-
-            // Act
-            //var firstResponse = await client.PostAsync("/api/Association", content);
-
-            // Assert first post
-            // firstResponse.EnsureSuccessStatusCode();
-            // Assert.Equal(System.Net.HttpStatusCode.Accepted, firstResponse.StatusCode);
 
             // Act duplicate post
             var duplicateResponse = await client.PostAsync("/api/Association", content);

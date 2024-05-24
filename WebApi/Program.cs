@@ -124,11 +124,4 @@ app.MapControllers();
 
 app.Run($"https://localhost:{port}");
 
-// static int GetPortForQueue(string queueName)
-// {
-//     int basePort = 5040;
-//     int queueIndex = int.Parse(queueName.Substring(2));
-//     return basePort + queueIndex;
-// }
-
 public partial class Program{ }
