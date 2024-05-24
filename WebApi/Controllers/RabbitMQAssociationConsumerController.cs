@@ -9,15 +9,15 @@ namespace WebApi.Controllers
     public class RabbitMQAssociationConsumerController : IRabbitMQConsumerController
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly ConnectionFactory _factory;
+        private readonly IConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _queueName;
 
-        public RabbitMQAssociationConsumerController(IServiceScopeFactory serviceScopeFactory)
+        public RabbitMQAssociationConsumerController(IServiceScopeFactory serviceScopeFactory, IConnectionFactory factory)
         {
             _serviceScopeFactory = serviceScopeFactory;
-            _factory = new ConnectionFactory { HostName = "localhost" };
+            _factory = factory;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
             _channel.ExchangeDeclare(exchange: "associationCreated", type: ExchangeType.Fanout);

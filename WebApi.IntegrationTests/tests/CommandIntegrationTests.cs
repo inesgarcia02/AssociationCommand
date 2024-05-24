@@ -105,23 +105,25 @@ namespace WebApi.IntegrationTests.Tests
 
                 Utilities.ReinitializeDbForTests(db);
             }
+
+            // associaçao que já está na base de dados
             var validAssociationDTO = new
             {
                 ColaboratorId = 1,
                 ProjectId = 1,
-                StartDate = DateOnly.FromDateTime(DateTime.Now),
-                EndDate = DateOnly.FromDateTime(DateTime.Now.AddDays(10)),
+                StartDate = new DateOnly(2024, 1, 1),
+                EndDate = new DateOnly(2024, 1, 31),
                 Fundamental = true
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(validAssociationDTO), Encoding.UTF8, "application/json");
 
             // Act
-            var firstResponse = await client.PostAsync("/api/Association", content);
+            //var firstResponse = await client.PostAsync("/api/Association", content);
 
             // Assert first post
-            firstResponse.EnsureSuccessStatusCode();
-            Assert.Equal(System.Net.HttpStatusCode.Accepted, firstResponse.StatusCode);
+            // firstResponse.EnsureSuccessStatusCode();
+            // Assert.Equal(System.Net.HttpStatusCode.Accepted, firstResponse.StatusCode);
 
             // Act duplicate post
             var duplicateResponse = await client.PostAsync("/api/Association", content);

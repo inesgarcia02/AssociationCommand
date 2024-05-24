@@ -5,12 +5,12 @@ namespace Gateway
 {
     public class HolidayVerificationAmqpGateway
     {
-        private readonly ConnectionFactory _factory;
+        private readonly IConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        public HolidayVerificationAmqpGateway()
+        public HolidayVerificationAmqpGateway(IConnectionFactory factory)
         {
-            _factory = new ConnectionFactory { HostName = "localhost" };
+            _factory = factory;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
             _channel.ExchangeDeclare(exchange: "holidayPendentResponse", type: ExchangeType.Fanout);
