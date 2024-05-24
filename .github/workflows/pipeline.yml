@@ -54,13 +54,13 @@ jobs:
            ${{ runner.os }}-nuget-
 
      - name: Restore dependencies
-       run: dotnet restore AssociationQ.sln
+       run: dotnet restore AssociationC.sln
 
      - name: Run Unit Tests
-       run: dotnet test AssociationQ.sln --filter FullyQualifiedName~Domain.Tests --configuration Release
+       run: dotnet test AssociationC.sln --filter FullyQualifiedName~Domain.Tests --configuration Release
 
      - name: Run Integration Tests
-       run: dotnet test AssociationQ.sln --filter FullyQualifiedName~IntegrationTests --configuration Release
+       run: dotnet test AssociationC.sln --filter FullyQualifiedName~IntegrationTests --configuration Release
 
      - name: Upload Integration Test Results
        uses: actions/upload-artifact@v3
