@@ -32,11 +32,18 @@ var rabbitMqPass = config["RabbitMq:Password"];
 // Add services to the container.
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<AbsanteeContext>(opt =>
-    //opt.UseInMemoryDatabase("AbsanteeList")
-    //opt.UseSqlite("Data Source=AbsanteeDatabase.sqlite")
-    opt.UseSqlite(Host.CreateApplicationBuilder().Configuration.GetConnectionString(queueName))
-    );
+var dbConnectionString = config.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AbsanteeContext>(option =>
+{
+    option.UseNpgsql(dbConnectionString);
+}, optionsLifetime: ServiceLifetime.Scoped);
+ 
+ 
+// builder.Services.AddDbContextFactory<AbsanteeContext>(options =>
+// {
+//     options.UseNpgsql(dbConnectionString);
+// });
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -96,7 +103,6 @@ builder.Services.AddSingleton<IRabbitMQConsumerController, RabbitMQProjectConsum
 builder.Services.AddSingleton<IRabbitMQConsumerController, RabbitMQColaboratorConsumerController>();
 builder.Services.AddSingleton<IRabbitMQConsumerController, RabbitMQHolidayConsumerController>();
 
-
 var app = builder.Build();
 
 var rabbitMQConsumerServices = app.Services.GetServices<IRabbitMQConsumerController>();
@@ -114,12 +120,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAllOrigins");
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
-
 app.MapControllers();
 
 app.Run($"https://localhost:{port}");
