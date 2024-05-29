@@ -20,29 +20,28 @@ if (replicaNameArg != null)
 else
     replicaName = config.GetConnectionString("replicaName");
 
+replicaName = "Repl1";
+
 var queueName = config["Queues:" + replicaName];
 
 var port = config["Ports:" + replicaName];
 
-var rabbitMqHost = config["RabbitMq:Host"];
-var rabbitMqPort = config["RabbitMq:Port"];
-var rabbitMqUser = config["RabbitMq:UserName"];
-var rabbitMqPass = config["RabbitMq:Password"];
+Console.WriteLine("Environment Development: " + config["ASPNETCORE_ENVIRONMENT"]);
+Console.WriteLine("DB_CONNECTION: " + config["DB_CONNECTION"]);
+
+string dbConnectionString = config.DefineDbConnection();
+Console.WriteLine("DBConnectionString: " + dbConnectionString);
+
+RabbitMqConfiguration rabbitMqConfig = config.DefineRabbitMqConfiguration();
+Console.WriteLine("RabbitMqConfig: " + rabbitMqConfig.Hostname);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-var dbConnectionString = config.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AbsanteeContext>(option =>
 {
     option.UseNpgsql(dbConnectionString);
 }, optionsLifetime: ServiceLifetime.Scoped);
- 
- 
-// builder.Services.AddDbContextFactory<AbsanteeContext>(options =>
-// {
-//     options.UseNpgsql(dbConnectionString);
-// });
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -72,10 +71,10 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
     return new ConnectionFactory()
     {
-        HostName = rabbitMqHost,
-        Port = int.Parse(rabbitMqPort),
-        UserName = rabbitMqUser,
-        Password = rabbitMqPass
+        HostName = rabbitMqConfig.Hostname,
+        UserName = rabbitMqConfig.Username,
+        Password = rabbitMqConfig.Password,
+        Port = int.Parse(rabbitMqConfig.Port.ToString())
     };
 });
 
@@ -113,17 +112,17 @@ foreach (var service in rabbitMQConsumerServices)
 };
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// if (app.Environment.IsDevelopment())
+// {
+app.UseSwagger();
+app.UseSwaggerUI();
+// }
 
 app.UseCors("AllowAllOrigins");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run($"https://localhost:{port}");
+app.Run();
 
-public partial class Program{ }
+public partial class Program { }

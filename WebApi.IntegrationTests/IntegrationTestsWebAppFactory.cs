@@ -87,6 +87,11 @@ public class IntegrationTestsWebAppFactory<TProgram> : WebApplicationFactory<TPr
         _rabbitHost = _rabbitMqContainer.Hostname;
         _rabbitPort = _rabbitMqContainer.GetMappedPublicPort(5672);
 
+        Environment.SetEnvironmentVariable("RabbitMq:Host", _rabbitHost);
+        Environment.SetEnvironmentVariable("RabbitMq:Port", _rabbitPort.ToString());
+        Environment.SetEnvironmentVariable("RabbitMq:UserName", "guest");
+        Environment.SetEnvironmentVariable("RabbitMq:Password", "guest");
+
         await Task.Delay(10000);
     }
 

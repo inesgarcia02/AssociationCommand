@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  webapi:
+    image: absantee
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - target: 8080
+        published: 5005
+        protocol: tcp
+        mode: ingress
+    depends_on:
+      - postgresdb1
+      - postgresdb2
+      - rabbitmq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Containerized
+      DB_CONNECTION: Host=AbsanteeStack_postgresdb{{.Task.Slot}};Database=absantee;Username=postgres;Password=password
+    networks:
+      - backend
+    deploy:
+      mode: replicated
+      replicas: 2
+      # update_config:
+      #   parallelism: 2
+      # restart_policy:
+      #   condition: on-failure
+
+  postgresdb1:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=absantee
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - "postgres-data_1:/var/lib/postgresql/data"
+    networks:
+      - backend
+
+  postgresdb2:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5433:5433"
+    environment:
+      - POSTGRES_DB=absantee
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - "postgres-data_2:/var/lib/postgresql/data"
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"  # RabbitMQ main port
+      - "15672:15672"  # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: overlay
+
+volumes:
+  postgres-data_1:
+  postgres-data_2:

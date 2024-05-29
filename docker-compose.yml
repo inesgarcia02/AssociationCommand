@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  webapi:
+    image: absantee
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5031:8080"
+      # - target: 8080
+      #   published: 5005
+      #   protocol: tcp
+      #   mode: ingress
+    depends_on:
+      - postgres
+      #- postgresdb2
+      - rabbitmq
+    environment:
+      - DB_CONNECTION=Host=postgres;Database=absantee;Username=postgres;Password=password
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      #- DB_CONNECTION_STRING=Host=postgresdb{{.Task.Slot}};Database=absantee;Username=postgres;Password=password
+      # - TASK_NAME={{.Task.Name}}
+      # - TASK_SLOT={{.Task.Slot}}
+      # - NODE_ID={{.Node.ID}}
+      # - SERVICE_ID={{.Service.ID}}
+    networks:
+      - backend
+    # deploy:
+    #   #mode: replicated
+    #   replicas: 2
+    #   update_config:
+    #     parallelism: 1
+    #   restart_policy:
+    #     condition: on-failure
+    # logging:
+    #   driver: json-file
+    #   options:
+    #     max-size: "10m"
+    #     max-file: "3"
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=absantee
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      # - TASK_SLOT={{.Task.Slot}}
+    volumes:
+      - "postgres-data_1:/var/lib/postgresql/data"
+    networks:
+      - backend
+
+  # postgresdb2:
+  #   image: postgres:alpine
+  #   restart: always
+  #   # ports:
+  #   #   - "5433:5432"
+  #   environment:
+  #     - TASK_SLOT={{.Task.Slot}}
+  #     - POSTGRES_DB=absantee
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=password
+  #     - RabbitMQ__HostName=rabbitmq
+  #     - RabbitMQ__UserName=guest
+  #     - RabbitMQ__Password=guest
+  #   volumes:
+  #     - "postgres-data_2:/var/lib/postgresql/data"
+  #   networks:
+  #     - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"  # RabbitMQ main port
+      - "15672:15672"  # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+    # driver: overlay
+
+volumes:
+  postgres-data_0:
+  postgres-data_1:
+  postgres-data_2:
+  postgres-data_3:
